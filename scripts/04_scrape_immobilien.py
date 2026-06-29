@@ -116,7 +116,7 @@ def main():
         if url:
             seen_urls.add(url)
         deduped.append(r)
-    print(f"Duplikaten-Filter: {len(results) - len(deduped)} entfernt → {len(deduped)} verbleiben")
+    print(f"Duplikaten-Filter: {len(results) - len(deduped)} entfernt -> {len(deduped)} verbleiben")
     results = deduped
 
     # Größenfilter (nur wenn Daten vorhanden — lieber behalten als verlieren)

@@ -160,6 +160,13 @@ def scrape_type(estate_type: str) -> list[dict]:
                     if slug_m:
                         title = unquote(unquote(slug_m.group(1))).replace("-", " ").title()
 
+                # Objekte rausfiltern die eindeutig keine Höfe/Landhäuser sind
+                EXCLUDE = ["wohnung", "eigentumswohnung", "apartment", "neubau", "erstbezug",
+                           "penthouse", "studio", "büro", "gewerbe", "praxis", "stadthaus"]
+                name_lower = title.lower()
+                if any(kw in name_lower for kw in EXCLUDE):
+                    continue
+
                 lat, lon = None, None
                 if location:
                     lat, lon = geocode(location)

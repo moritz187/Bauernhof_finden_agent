@@ -1,0 +1,8 @@
+pandas>=2.0
+requests>=2.31
+folium>=0.15
+geopandas>=0.14
+shapely>=2.0
+tqdm>=4.66
+beautifulsoup4>=4.12
+lxml>=5.0

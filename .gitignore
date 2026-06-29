@@ -1,0 +1,17 @@
+# Secrets
+.env
+
+# Große Datendateien
+data/gtfs.zip
+__pycache__/
+*.pyc
+
+# Output-Dateien (werden lokal generiert)
+output/isochrones.geojson
+output/karte.html
+output/karte_advanced.html
+
+# Aber stations.csv und immobilien.csv committen wir (nützlich als Snapshot)
+!output/stations.csv
+!output/immobilien.csv
+!output/manual_check.csv

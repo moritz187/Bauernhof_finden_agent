@@ -33,7 +33,7 @@ from shapely.geometry import Point, shape
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
-from scrapers import willhaben, immoscout, landwirt, hofnachfolge, raiffeisen, immmo, immowelt, sreal
+from scrapers import willhaben, immoscout, landwirt, hofnachfolge, raiffeisen, immmo, immowelt, sreal, immo_trend, my_landimmo, schlossseiten, muhr
 from config import MIN_LIVING_AREA_M2, MIN_PLOT_SIZE_M2
 
 ISOCHRONES_PATH = Path("output/isochrones.geojson")
@@ -86,6 +86,10 @@ def run_all_scrapers() -> list[dict]:
         ("immmo.at", immmo),
         ("immowelt.at", immowelt),
         ("sreal.at", sreal),
+        ("immo.trend.at", immo_trend),
+        ("my-landimmo.de", my_landimmo),
+        ("schlossseiten.at", schlossseiten),
+        ("muhr-immobilien.com", muhr),
     ]
     for name, module in scraper_modules:
         print(f"\n[{name}] starte Scraper ...")

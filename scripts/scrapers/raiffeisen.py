@@ -95,35 +95,58 @@ def scrape_type(estate_type: str) -> list[dict]:
             new_on_page = 0
             for card in cards:
                 href = card.get("href", "")
-                url = BASE + href.split("?")[0]  # ohne Query-Parameter
+                url = BASE + href.split("?")[0]
                 if url in seen:
                     continue
                 seen.add(url)
                 new_on_page += 1
 
-                # Titel aus h4
-                title_el = card.find(["h4", "h3", "h2"])
-                title = title_el.get_text(strip=True) if title_el else ""
+                # Titel aus title-Attribut des <a>-Tags (z.B. "Kaufen und Einziehen - #0001010644")
+                title = re.sub(r"\s*-\s*#\d+$", "", card.get("title", "")).strip()
 
-                # Alle <p> Tags im Card
-                paras = [p.get_text(strip=True) for p in card.find_all("p")]
+                # Elterncontainer: <div class="bg-white ...">
+                parent = card.find_parent("div", class_=re.compile(r"bg-white"))
+                if not parent:
+                    parent = card.find_parent(["li", "article", "div"])
 
                 location = ""
                 size_m2 = None
                 plot_size_m2 = None
+                rooms = None
                 price_str = None
 
-                for para in paras:
-                    if re.match(r"^\d{4}\s", para):  # PLZ + Ort
-                        location = para
-                    elif "Wohnfläche" in para or "Nutzfläche" in para:
-                        size_m2 = _parse_num(para)
-                    elif "Grundfläche" in para or "Grundstück" in para:
-                        plot_size_m2 = _parse_num(para)
-                    elif "Kaufpreis" in para or "€" in para:
-                        price_str = para.replace("Kaufpreis:", "").strip()
+                if parent:
+                    # Ort: <small class="block">2700 Wiener Neustadt</small>
+                    small = parent.find("small")
+                    if small:
+                        location = small.get_text(strip=True)
 
-                # PLZ + Ort aus URL extrahieren (doppelt URL-decodieren wegen %2520)
+                    # Titel-Fallback aus <h4>
+                    if not title:
+                        h4 = parent.find("h4")
+                        if h4:
+                            title = h4.get_text(strip=True)
+
+                    # Fakten aus <dl class="facts"> mit <dt>/<dd> Paaren
+                    dl = parent.find("dl", class_=re.compile(r"facts"))
+                    if dl:
+                        facts = {}
+                        for div in dl.find_all("div"):
+                            dt = div.find("dt")
+                            dd = div.find("dd")
+                            if dt and dd:
+                                facts[dt.get_text(strip=True)] = dd.get_text(strip=True)
+                        for key, val in facts.items():
+                            if "Wohnfl" in key or "Nutzfl" in key:
+                                size_m2 = _parse_num(val)
+                            elif "Grundfl" in key or "Grundst" in key:
+                                plot_size_m2 = _parse_num(val)
+                            elif "Zimmer" in key:
+                                rooms = _parse_num(val)
+                            elif "Kaufpreis" in key or "Preis" in key:
+                                price_str = val.strip()
+
+                # PLZ + Ort aus URL als Fallback
                 if not location:
                     m = re.search(r"/kauf/(\d{4})/([^/?]+)/", href)
                     if m:
@@ -131,11 +154,11 @@ def scrape_type(estate_type: str) -> list[dict]:
                         ort = unquote(unquote(m.group(2))).replace("-", " ").title()
                         location = f"{plz} {ort}"
 
-                # Titel aus URL-Slug als Fallback
+                # Titel aus URL-Slug als letzter Fallback
                 if not title:
                     slug_m = re.search(r"/kauf/\d{4}/[^/]+/([^./]+)\.", href)
                     if slug_m:
-                        title = unquote(unquote(slug_m.group(1))).replace("-", " ").replace("%20", " ").title()
+                        title = unquote(unquote(slug_m.group(1))).replace("-", " ").title()
 
                 lat, lon = None, None
                 if location:
@@ -146,7 +169,7 @@ def scrape_type(estate_type: str) -> list[dict]:
                     "price_eur": price_str,
                     "size_m2": size_m2,
                     "plot_size_m2": plot_size_m2,
-                    "rooms": None,
+                    "rooms": rooms,
                     "location": location,
                     "postcode": location[:4] if location else None,
                     "lat": lat,

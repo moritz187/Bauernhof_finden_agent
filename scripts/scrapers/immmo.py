@@ -29,11 +29,8 @@ CATEGORIES = [
     "/immo/Bauernhaus-kaufen/Oberoesterreich",
     "/immo/Bauernhaus-kaufen/Steiermark",
     "/vierkanthof-kaufen",
-    "/oesterreich-vierkanthof-kaufen",
     "/bauernhof-mostviertel-kaufen",
     "/bauernhoefe-im-mostviertel",
-    "/haus-in-alleinlage-mostviertel",
-    "/landwirtschaft-bauernhof-kaufen",
 ]
 
 HEADERS = {

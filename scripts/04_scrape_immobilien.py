@@ -119,6 +119,16 @@ def main():
     print(f"Duplikaten-Filter: {len(results) - len(deduped)} entfernt -> {len(deduped)} verbleiben")
     results = deduped
 
+    # Grundstücks-Filter: reine Baugrundstücke ohne Gebäude ausschließen
+    GRUNDSTUECK_KEYWORDS = ["grundstück", "baugrundstück", "baugrund", "liegenschaft", "waldgrundstück", "agrarfläche"]
+    before_gs = len(results)
+    results = [
+        r for r in results
+        if not any(kw in (r.get("name") or "").lower() for kw in GRUNDSTUECK_KEYWORDS)
+        or (r.get("size_m2") and _to_float(r.get("size_m2", 0)) > 0)
+    ]
+    print(f"Grundstücks-Filter: {before_gs - len(results)} reine Grundstücke entfernt")
+
     # Größenfilter (nur wenn Daten vorhanden — lieber behalten als verlieren)
     before = len(results)
     size_filtered = []

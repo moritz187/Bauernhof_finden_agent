@@ -33,7 +33,7 @@ from shapely.geometry import Point, shape
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
-from scrapers import willhaben, immoscout, landwirt, hofnachfolge
+from scrapers import willhaben, immoscout, landwirt, hofnachfolge, raiffeisen, immmo, immowelt, sreal
 from config import MIN_LIVING_AREA_M2, MIN_PLOT_SIZE_M2
 
 ISOCHRONES_PATH = Path("output/isochrones.geojson")
@@ -82,6 +82,10 @@ def run_all_scrapers() -> list[dict]:
         ("immoscout24.at", immoscout),
         ("landwirt.com", landwirt),
         ("hofnachfolge.at", hofnachfolge),
+        ("raiffeisen-immobilien.at", raiffeisen),
+        ("immmo.at", immmo),
+        ("immowelt.at", immowelt),
+        ("sreal.at", sreal),
     ]
     for name, module in scraper_modules:
         print(f"\n[{name}] starte Scraper ...")
@@ -100,7 +104,20 @@ def main():
     print(f"{len(iso_shapes)} Isochrone-Polygone geladen.\n")
 
     results = run_all_scrapers()
-    print(f"\nGesamt: {len(results)} Einträge von allen Plattformen.")
+    print(f"\nGesamt (roh): {len(results)} Einträge von allen Plattformen.")
+
+    # Duplikaten-Filter: gleiche URL über Plattformen hinweg (Aggregatoren zeigen oft auf selbe Inserate)
+    seen_urls: set[str] = set()
+    deduped = []
+    for r in results:
+        url = r.get("url", "")
+        if url and url in seen_urls:
+            continue
+        if url:
+            seen_urls.add(url)
+        deduped.append(r)
+    print(f"Duplikaten-Filter: {len(results) - len(deduped)} entfernt → {len(deduped)} verbleiben")
+    results = deduped
 
     # Größenfilter (nur wenn Daten vorhanden — lieber behalten als verlieren)
     before = len(results)

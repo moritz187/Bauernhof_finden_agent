@@ -31,7 +31,12 @@ IMMONET_URLS = [
 
 IMMOKRALLE_URLS = [
     ("https://www.immokralle.com/immobilien/at/bauernhof", "Bauernhof"),
+    ("https://www.immokralle.com/immobilien/at/bauernhaus", "Bauernhaus"),
+    ("https://www.immokralle.com/immobilien/at/vierkanthof", "Vierkanthof"),
     ("https://www.immokralle.com/immobilien/at/landhaus", "Landhaus"),
+    ("https://www.immokralle.com/immobilien/at/schloss", "Schloss"),
+    ("https://www.immokralle.com/immobilien/at/reiterhof", "Reiterhof"),
+    ("https://www.immokralle.com/immobilien/at/weingut", "Weingut"),
 ]
 
 

@@ -176,6 +176,7 @@ def build_html(stations, isochrones, properties):
       <span><span class="legend-dot" style="background:#f39c12"></span>30–60 Min.</span>
       <span><span class="legend-dot" style="background:#e74c3c"></span>60–90 Min.</span>
       <span><span class="legend-dot" style="background:#f1c40f;border:1px solid #ccc"></span>Favorit</span>
+      <span><span class="legend-dot" style="background:transparent;border:2px dashed #e67e22"></span>? Standort ungefähr</span>
     </div>
   </div>
 </div>
@@ -254,10 +255,12 @@ PROPERTIES.forEach((p, i) => {{
   const marker = L.circleMarker([p.lat, p.lon], markerStyle(i, p));
   const price = p.price_eur ? `€ ${{p.price_eur}}` : 'Preis auf Anfrage';
   const size = p.size_m2 ? `${{p.size_m2}} m²` : '';
+  const isApprox = p.location_approximate === true || p.location_approximate === 'True';
   marker.bindPopup(`
     <b>${{(p.name||'').substring(0,80)}}</b><br>
     ${{price}}${{size ? ' · ' + size : ''}}<br>
     🚂 ${{p.station_travel_min||'?'}} Min. via ${{p.nearest_station||''}}<br>
+    ${{isApprox ? '<span style="color:#e67e22;font-size:11px">? Ungefährer Standort (Ortsname)</span><br>' : ''}}
     <a href="${{p.url}}" target="_blank">→ Inserat öffnen</a>
   `, {{maxWidth: 280}});
   marker.on('click', () => highlightCard(i));
@@ -266,12 +269,14 @@ PROPERTIES.forEach((p, i) => {{
 
 function markerStyle(i, p) {{
   const isFav = favorites.has(i);
+  const isApprox = p.location_approximate === true || p.location_approximate === 'True';
   return {{
     radius: isFav ? 10 : 8,
-    color: isFav ? '#5d4c00' : '#fff',
+    color: isFav ? '#5d4c00' : (isApprox ? '#e67e22' : '#fff'),
     fillColor: isFav ? '#f1c40f' : platformColor(p.platform),
-    fillOpacity: 0.95,
-    weight: isFav ? 2 : 2,
+    fillOpacity: isFav ? 0.95 : (isApprox ? 0.45 : 0.9),
+    weight: isFav ? 2.5 : (isApprox ? 1.5 : 2),
+    dashArray: isApprox && !isFav ? '5 4' : null,
   }};
 }}
 

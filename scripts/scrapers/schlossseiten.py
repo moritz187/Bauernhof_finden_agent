@@ -60,7 +60,7 @@ def scrape():
 
             new_on_page = 0
             for a in links:
-                href = a["href"]
+                href = a["href"].split("?")[0].split("#")[0].rstrip("/")
                 full_url = BASE + href if href.startswith("/") else href
                 if full_url in seen or full_url == BASE + "/immobilien": continue
                 seen.add(full_url)

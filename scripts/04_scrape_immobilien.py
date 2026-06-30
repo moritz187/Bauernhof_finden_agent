@@ -27,9 +27,13 @@ Output:
 
 import json
 import sys
+import time as _time
+import requests
 import pandas as pd
 from pathlib import Path
 from shapely.geometry import Point, shape
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
@@ -39,6 +43,30 @@ from config import MIN_LIVING_AREA_M2, MIN_PLOT_SIZE_M2
 ISOCHRONES_PATH = Path("output/isochrones.geojson")
 OUTPUT_CSV = Path("output/immobilien.csv")
 MANUAL_CSV = Path("output/manual_check.csv")
+
+FOREIGN_KEYWORDS = ["ungarn", "kroatien", "italien", "slowakei", "tschechien", "deutschland", "schweiz", "slowenien", "frankreich"]
+STREET_KEYWORDS = ["straße", "gasse", "weg", "allee", "platz", "ring", "zeile", "str."]
+_geocode_cache: dict = {}
+
+def _nominatim_geocode(address: str):
+    """Nominatim geocoding mit Cache."""
+    if address in _geocode_cache:
+        return _geocode_cache[address]
+    try:
+        r = requests.get("https://nominatim.openstreetmap.org/search",
+            params={"q": address + ", Österreich", "format": "json", "limit": 1},
+            headers={"User-Agent": "BauernhofFinder/1.0 moritz95meyer@gmail.com"},
+            timeout=10, verify=False)
+        d = r.json()
+        if d:
+            result = float(d[0]["lat"]), float(d[0]["lon"])
+            _geocode_cache[address] = result
+            _time.sleep(1.1)
+            return result
+    except Exception:
+        pass
+    _geocode_cache[address] = (None, None)
+    return None, None
 
 
 def _to_float(val) -> float | None:
@@ -165,8 +193,42 @@ def main():
         else:
             no_coords.append(r)
 
+    # location_approximate: True wenn nur PLZ/Ort, keine Straße
+    for r in in_zone:
+        loc = (r.get("location") or "").lower()
+        r.setdefault("location_approximate", not any(k in loc for k in STREET_KEYWORDS))
+
+    # Retry geocoding für österreichische manual_check-Einträge mit Location-Text
+    retry_candidates = [
+        r for r in no_coords
+        if r.get("location") and str(r["location"]).strip()
+        and not any(kw in str(r["location"]).lower() for kw in FOREIGN_KEYWORDS)
+    ]
+    remaining_no_coords = [r for r in no_coords if r not in retry_candidates]
+    retry_added = 0
+    if retry_candidates:
+        print(f"\nRetry geocoding: {len(retry_candidates)} österreichische Einträge ohne Koordinaten ...")
+        for r in retry_candidates:
+            lat, lon = _nominatim_geocode(str(r["location"]))
+            if lat and lon:
+                r["lat"] = lat
+                r["lon"] = lon
+                r["location_approximate"] = True
+                match = find_matching_station(lat, lon, iso_shapes)
+                if match:
+                    r["nearest_station"] = match["stop_name"]
+                    r["station_travel_min"] = match["min_travel_min"]
+                    in_zone.append(r)
+                    retry_added += 1
+                else:
+                    remaining_no_coords.append(r)
+            else:
+                remaining_no_coords.append(r)
+        no_coords = remaining_no_coords
+        print(f"  -> {retry_added} neue Objekte mit '?' Standort in Zone gefunden")
+
     print(f"\nErgebnis:")
-    print(f"  {len(in_zone)} Objekte innerhalb Isochrone -> {OUTPUT_CSV}")
+    print(f"  {len(in_zone)} Objekte innerhalb Isochrone (davon {retry_added} mit ? Standort) -> {OUTPUT_CSV}")
     print(f"  {len(no_coords)} Objekte ohne Koordinaten -> {MANUAL_CSV}")
     print(f"  {outside} Objekte außerhalb Isochrone (verworfen)")
 

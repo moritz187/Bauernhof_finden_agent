@@ -224,8 +224,8 @@ function travelColor(min) {{
   return '#e74c3c';
 }}
 function platformColor(p) {{
-  const c = {{'willhaben.at':'#2980b9','immobilien.net':'#8e44ad','immokralle.com':'#16a085','landwirt.com':'#6d4c41','hofnachfolge.at':'#e67e22'}};
-  return c[p] || '#555';
+  const c = {{'willhaben.at':'#1a5c8a','immobilien.net':'#6c2f8a','immokralle.com':'#0e6b55','landwirt.com':'#4a2f1a','hofnachfolge.at':'#b35a00','raiffeisen-immobilien.at':'#8a1a1a','immmo.at':'#1a4a8a','immowelt.at':'#2d5a1a','muhr-immobilien.com':'#5a1a6b','schlossseiten.at':'#1a6b5a','my-landimmo.de':'#6b4a00','immo.trend.at':'#003d66'}};
+  return c[p] || '#2c3e50';
 }}
 function parseNum(v) {{
   if (v === null || v === undefined) return null;
@@ -271,11 +271,11 @@ function markerStyle(i, p) {{
   const isFav = favorites.has(i);
   const isApprox = p.location_approximate === true || p.location_approximate === 'True';
   return {{
-    radius: isFav ? 10 : 8,
-    color: isFav ? '#5d4c00' : (isApprox ? '#e67e22' : '#fff'),
+    radius: isFav ? 11 : 9,
+    color: isFav ? '#5d4c00' : '#fff',
     fillColor: isFav ? '#f1c40f' : platformColor(p.platform),
-    fillOpacity: isFav ? 0.95 : (isApprox ? 0.45 : 0.9),
-    weight: isFav ? 2.5 : (isApprox ? 1.5 : 2),
+    fillOpacity: 0.92,
+    weight: isFav ? 2.5 : (isApprox ? 1 : 2),
     dashArray: isApprox && !isFav ? '5 4' : null,
   }};
 }}

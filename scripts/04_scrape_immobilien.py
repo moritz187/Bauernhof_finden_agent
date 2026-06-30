@@ -124,7 +124,7 @@ def main():
     results = deduped
 
     # Grundstücks-Filter: reine Baugrundstücke ohne Gebäude ausschließen
-    GRUNDSTUECK_KEYWORDS = ["grundstück", "baugrundstück", "baugrund", "liegenschaft", "waldgrundstück", "agrarfläche"]
+    GRUNDSTUECK_KEYWORDS = ["baugrundstück", "baugrund", "waldgrundstück", "agrarfläche", "weingartenparzelle"]
     before_gs = len(results)
     results = [
         r for r in results
